@@ -1,0 +1,40 @@
+{
+  "name": "desk-companion-calendar",
+  "version": "1.0.0",
+  "description": "A KDE tray app showing your next Apple Calendar events",
+  "main": "electron/main.js",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "build": "vite build",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --linux",
+    "fetch": "python/.venv/bin/python python/fetch_events.py --verbose"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.1"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "build": {
+    "appId": "dev.deskcompanion.calendar",
+    "productName": "Desk Companion",
+    "files": ["dist/**/*", "electron/**/*", "package.json"],
+    "extraResources": [{ "from": "build", "to": "build", "filter": ["tray-*.png"] }],
+    "linux": {
+      "target": ["AppImage", "rpm"],
+      "category": "Utility;Calendar",
+      "icon": "build/icon.png",
+      "maintainer": "your.email@example.com"
+    }
+  }
+}
