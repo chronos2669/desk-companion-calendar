@@ -223,23 +223,48 @@ function createPopover() {
 }
 
 function positionPopover() {
-  // tray.getBounds() is unusable on Linux, so anchor to the cursor and
-  // clamp inside the display's work area (which excludes the panel).
   const cursor = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(cursor);
-  const { x: areaX, y: areaY, width: areaW, height: areaH } = display.workArea;
+  const { bounds, workArea } = display;
+  const margin = 8;
 
-  const x = Math.round(
-    Math.min(Math.max(cursor.x - WINDOW_WIDTH / 2, areaX + 8), areaX + areaW - WINDOW_WIDTH - 8)
+  // KDE reserves a strip for the panel, so the gap between the full screen
+  // and the usable area tells us which edge it's on — no cursor needed.
+  const reserved = {
+    bottom: (bounds.y + bounds.height) - (workArea.y + workArea.height),
+    top: workArea.y - bounds.y,
+    left: workArea.x - bounds.x,
+    right: (bounds.x + bounds.width) - (workArea.x + workArea.width)
+  };
+
+  // Ties go to "bottom", which is both the KDE default and the sane
+  // fallback when the panel is set to auto-hide and reserves nothing.
+  const [panelEdge] = Object.entries(reserved).reduce((best, entry) =>
+    entry[1] > best[1] ? entry : best
   );
 
-  // Panel at the bottom: open upward. Panel at the top: open downward.
-  const nearBottom = cursor.y > areaY + areaH / 2;
-  const y = nearBottom
-    ? Math.max(areaY + 8, areaY + areaH - WINDOW_HEIGHT - 8)
-    : Math.min(areaY + 8, areaY + areaH - WINDOW_HEIGHT - 8);
+  // Default: bottom-right, where the system tray lives on a bottom panel.
+  let x = workArea.x + workArea.width - WINDOW_WIDTH - margin;
+  let y = workArea.y + workArea.height - WINDOW_HEIGHT - margin;
 
-  popover.setPosition(x, y, false);
+  if (panelEdge === "top") {
+    y = workArea.y + margin;
+  } else if (panelEdge === "left") {
+    x = workArea.x + margin;
+  }
+
+  // Only centre on the cursor if it gave a believable reading. Under
+  // Wayland it reports (0, 0) when the pointer is over the tray, which is
+  // how the window ended up in the wrong corner.
+  const cursorUsable = cursor.x > bounds.x && cursor.y > bounds.y;
+  if (cursorUsable && (panelEdge === "top" || panelEdge === "bottom")) {
+    x = Math.min(
+      Math.max(cursor.x - WINDOW_WIDTH / 2, workArea.x + margin),
+      workArea.x + workArea.width - WINDOW_WIDTH - margin
+    );
+  }
+
+  popover.setPosition(Math.round(x), Math.round(y), false);
 }
 
 function togglePopover() {
