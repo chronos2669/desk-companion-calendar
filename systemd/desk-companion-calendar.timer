@@ -4,8 +4,6 @@ Description=Refresh calendar events every 10 minutes
 [Timer]
 OnStartupSec=30s
 OnUnitActiveSec=10min
-# Fire immediately if a run was missed while suspended, rather than
-# waiting for the next interval.
 Persistent=true
 AccuracySec=30s
 

@@ -1,16 +1,17 @@
 [Unit]
 Description=Fetch upcoming iCloud calendar events
-Documentation=https://github.com/chronos2669/desk-companion-calendar
 After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/Documents/desk-companion-calendar/python/.venv/bin/python %h/Documents/desk-companion-calendar/python/fetch_events.py
+WorkingDirectory=%h/Documents/desk-companion-calendar/python
+ExecStart=%h/Documents/desk-companion-calendar/python/.venv/bin/python fetch_events.py
 
-# The script only ever reads a secret and writes one cache file.
-# Nothing else on the filesystem needs to be reachable.
+# Creates ~/.cache/desk-companion if absent and makes it writable inside
+# the sandbox. ReadWritePaths only mounts a directory that already exists
+CacheDirectory=desk-companion
+
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=%h/.cache/desk-companion
 NoNewPrivileges=true
