@@ -89,10 +89,23 @@ function dayLabel(isoString) {
 // --------------------------------------------------------------------------
 
 function trayIconPath(name) {
-  const base = isDev ? path.join(__dirname, "..", "build") : path.join(process.resourcesPath, "build");
-  return path.join(base, name);
-}
+  // Packaging determines where the PNGs are, not NODE_ENV. electron-builder's
+  // extraResources puts them under resourcesPath; unpackaged runs — dev or
+  // `npm start` — read them straight out of the repo.
+  const base = app.isPackaged
+    ? path.join(process.resourcesPath, "build")
+    : path.join(__dirname, "..", "build");
 
+  const iconPath = path.join(base, name);
+
+  // createFromPath fails silently on a missing file, which shows up as an
+  // empty tray slot with nothing in the logs. Say so instead.
+  if (!fs.existsSync(iconPath)) {
+    console.error(`Tray icon missing: ${iconPath}`);
+  }
+
+  return iconPath;
+}
 function refreshTray() {
   if (!tray) {
     return;
